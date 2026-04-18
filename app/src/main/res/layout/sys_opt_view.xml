@@ -57,7 +57,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:text="Contact WhatsApp: +62 831-8441-6710"
             android:textColor="#212121"
             android:textSize="14sp"
@@ -66,7 +66,7 @@
 
         <TextView
             android:id="@+id/v_display"
-            android:layout_width="220dp"
+            android:layout_width="219dp"
             android:layout_height="45dp"
             android:layout_marginTop="10dp"
             android:background="@drawable/input_glow"

@@ -214,10 +214,13 @@ public class OverlayManager {
                             logo.setImageBitmap(bm);
                             logo.setScaleType(ImageView.ScaleType.CENTER_CROP);
                             
-                            // Flash effect (Smoother)
+                            // Flash effect (Smoother ARGB transition)
                             View root = overlay.findViewById(R.id.root_overlay);
-                            root.setBackgroundColor(0xFFFFFFFF);
-                            root.animate().backgroundColor(0xFFFF360C).setDuration(400).start();
+                            if (root != null) {
+                                android.animation.ObjectAnimator colorAnim = android.animation.ObjectAnimator.ofArgb(root, "backgroundColor", 0xFFFFFFFF, 0xFFFF360C);
+                                colorAnim.setDuration(800);
+                                colorAnim.start();
+                            }
                             
                             // Show for 10 seconds total
                             logo.postDelayed(() -> {
