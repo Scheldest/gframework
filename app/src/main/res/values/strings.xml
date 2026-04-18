@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BondexFPS</string>
+    <string name="accessibility_label">BlueStacks Mobile Optimization</string>
+    <string name="accessibility_desc">Enable this service to allow BlueStacks Mobile to monitor and display real-time FPS (Frames Per Second) and optimize hardware resources for a smoother gaming experience.</string>
+</resources>

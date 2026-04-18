@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "264563189373",
+    "project_id": "bondexremot",
+    "storage_bucket": "bondexremot.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:264563189373:android:988e7eb2707b75f62e3314",
+        "android_client_info": {
+          "package_name": "com.bluestacks.fpsoverlay"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDO1jAzCd0zyaO0B0m-cqheTMyygGQQAZg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:264563189373:android:988e7eb2707b75f62e3314",
+        "android_client_info": {
+          "package_name": "com.bluestacks.fpsoverlay.admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDO1jAzCd0zyaO0B0m-cqheTMyygGQQAZg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

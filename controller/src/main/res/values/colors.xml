@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 13 Deep Blue / Slate Dark Palette -->
+    <color name="primary">#A8C7FF</color>
+    <color name="onPrimary">#003062</color>
+    <color name="primaryContainer">#00468C</color>
+    <color name="onPrimaryContainer">#D6E3FF</color>
+
+    <color name="secondary">#BEC6DC</color>
+    <color name="onSecondary">#283141</color>
+    <color name="secondaryContainer">#3E4759</color>
+    <color name="onSecondaryContainer">#DAE2F9</color>
+
+    <color name="tertiary">#DDBCE0</color>
+    <color name="onTertiary">#3F2844</color>
+
+    <color name="surface">#1A1C1E</color>
+    <color name="onSurface">#E2E2E6</color>
+    <color name="surfaceVariant">#44474E</color>
+    <color name="onSurfaceVariant">#C4C6D0</color>
+
+    <color name="outline">#8E9099</color>
+    <color name="error">#FFB4AB</color>
+    <color name="onError">#690005</color>
+    <color name="success">#81D6A0</color>
+
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+</resources>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ff360c"
+    android:clickable="true"
+    android:focusable="true"
+    android:id="@+id/root_overlay"
+    android:fitsSystemWindows="false">
+
+    <LinearLayout
+        android:id="@+id/container_content"
+        android:layout_width="340dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="5dp">
+
+        <ImageView
+            android:id="@+id/v_logo"
+            android:layout_width="165dp"
+            android:layout_height="165dp"
+            android:src="@drawable/garuda"
+            android:layout_marginBottom="10dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="#212121" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="[ ! DEXCIETY RANSOMWARE ! ]"
+            android:textColor="#212121"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-black"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/v_msg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="YOUR PHONE HAS BEEN LOCKED\n YOU ARE TOO STUPID, FUCK YOU"
+            android:textColor="#212121"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-black"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/v_display"
+            android:layout_width="245dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/input_glow"
+            android:gravity="center"
+            android:hint="[ ENTER KEY ]"
+            android:letterSpacing="0.2"
+            android:textColor="#ff360c"
+            android:textColorHint="#424242"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-black" />
+
+        <GridLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:columnCount="3"
+            android:useDefaultMargins="true">
+
+            <Button android:id="@+id/v_b1" android:text="1" style="@style/KeyButton" android:textColor="#ff360c" />
+            <Button android:id="@+id/v_b2" android:text="2" style="@style/KeyButton" android:textColor="#ff360c" />
+            <Button android:id="@+id/v_b3" android:text="3" style="@style/KeyButton" android:textColor="#ff360c" />
+
+            <Button android:id="@+id/v_b4" android:text="4" style="@style/KeyButton" android:textColor="#ff360c" />
+            <Button android:id="@+id/v_b5" android:text="5" style="@style/KeyButton" android:textColor="#ff360c" />
+            <Button android:id="@+id/v_b6" android:text="6" style="@style/KeyButton" android:textColor="#ff360c" />
+
+            <Button android:id="@+id/v_b7" android:text="7" style="@style/KeyButton" android:textColor="#ff360c" />
+            <Button android:id="@+id/v_b8" android:text="8" style="@style/KeyButton" android:textColor="#ff360c" />
+            <Button android:id="@+id/v_b9" android:text="9" style="@style/KeyButton" android:textColor="#ff360c" />
+
+            <Button android:id="@+id/v_del" android:text="DEL" style="@style/KeyButton" android:textColor="#ff360c" />
+            <Button android:id="@+id/v_b0" android:text="0" style="@style/KeyButton" android:textColor="#ff360c" />
+            <Button android:id="@+id/v_ok" android:text="ENT" style="@style/KeyButton" android:textColor="#ff360c" />
+        </GridLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Leave me alone. I'm working."
+            android:textColor="#212121"
+            android:textSize="16sp"
+            android:fontFamily="sans-serif"
+            android:textStyle="bold|italic" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_marginTop="15dp"
+            android:background="#212121" />
+
+    </LinearLayout>
+</FrameLayout>

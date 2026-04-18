@@ -1,0 +1,71 @@
+plugins {
+    id 'com.android.application'
+    id 'com.google.gms.google-services'
+}
+
+android {
+    namespace 'com.bluestacks.fpsoverlay'
+    compileSdk 33
+    ndkVersion "25.1.8937393"
+
+    // 1. Tambahkan Konfigurasi Tanda Tangan (Signing)
+    signingConfigs {
+        release {
+            // Pastikan file my-release-key.jks berada di folder 'app'
+            storeFile file("my-release-key.jks")
+            storePassword "fradita123" // Masukkan password keystore
+            keyAlias "my-alias"
+            keyPassword "fradita123"    // Biasanya sama dengan storePassword
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.bluestacks.fpsoverlay"
+        minSdk 26
+        targetSdk 33
+        
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+        }
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++17"
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            // 2. Hubungkan tipe release dengan config signing di atas
+            signingConfig signingConfigs.release
+            
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
+        }
+    }
+
+    packaging {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    
+    // Firebase
+    implementation platform('com.google.firebase:firebase-bom:32.2.0')
+    implementation 'com.google.firebase:firebase-database'
+    // Tidak menggunakan dependensi eksternal berlebihan untuk menjaga size tetap kecil
+}

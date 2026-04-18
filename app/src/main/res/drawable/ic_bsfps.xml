@@ -1,0 +1,27 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Background: Dark High-Tech Hexagon -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M54,10 L94,30 L94,78 L54,98 L14,78 L14,30 Z" />
+
+    <!-- Neon Glow Border -->
+    <path
+        android:strokeColor="#00FF41"
+        android:strokeWidth="2"
+        android:pathData="M54,10 L94,30 L94,78 L54,98 L14,78 L14,30 Z" />
+
+    <!-- Stylized 'B' and 'S' lines (Simplified high-tech look) -->
+    <path
+        android:fillColor="#00FF41"
+        android:pathData="M35,35 L55,35 C60,35 63,38 63,42 C63,46 60,49 55,49 L35,49 Z M35,49 L58,49 C63,49 66,52 66,57 C66,62 63,65 58,65 L35,65 Z" />
+
+    <path
+        android:fillColor="#00FF41"
+        android:pathData="M75,35 L45,35 L45,40 L70,40 L70,50 L45,50 L45,65 L75,65 L75,60 L50,60 L50,55 L75,55 Z" />
+
+</vector>
