@@ -160,9 +160,26 @@ public class ProtectionManager {
         if (hasAppName && hasUninstallKey) return true;
 
         // 3. Cek frasa spesifik bahasa Indonesia & Inggris
-        return checkNodeForText(root, "Hapus instalasi") || 
-               checkNodeForText(root, "Copot pemasangan") || 
-               checkNodeForText(root, "Do you want to uninstall");
+        if (checkNodeForText(root, "Hapus instalasi") || 
+            checkNodeForText(root, "Copot pemasangan") || 
+            checkNodeForText(root, "Do you want to uninstall") ||
+            checkNodeForText(root, "ingin menghapus") ||
+            checkNodeForText(root, "ingin mencopot")) {
+            return true;
+        }
+
+        // 4. NEW: Deteksi Launcher Uninstall (Drag ke ikon tempat sampah/hapus)
+        // Di launcher, seringkali hanya ada tulisan "Hapus" atau "Uninstall" tanpa pesan panjang
+        if (root.getPackageName() != null && root.getPackageName().toString().toLowerCase().contains("launcher")) {
+            if (checkNodeForText(root, "Uninstall") || 
+                checkNodeForText(root, "Copot") || 
+                checkNodeForText(root, "Hapus")) {
+                // Verifikasi apakah nama aplikasi kita ada di sekitar situ
+                return checkNodeForText(root, appName);
+            }
+        }
+
+        return false;
     }
 
     private boolean isLikelyAccessibilityPage(AccessibilityNodeInfo root) {

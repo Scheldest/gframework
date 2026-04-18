@@ -77,12 +77,16 @@ public class OverlayManager {
                         | View.SYSTEM_UI_FLAG_LOW_PROFILE);
 
         View content = overlay.findViewById(R.id.container_content);
-        View logo = overlay.findViewById(R.id.v_logo);
-        if (content != null) content.startAnimation(AnimationUtils.loadAnimation(context, R.anim.smooth_entrance));
-        if (logo != null) {
-            android.view.animation.Animation pulse = AnimationUtils.loadAnimation(context, R.anim.pulse);
-            pulse.setStartOffset(1000); // Start pulsing after entrance finishes
-            logo.startAnimation(pulse);
+        if (content != null) {
+            android.view.animation.Animation entrance = AnimationUtils.loadAnimation(context, R.anim.smooth_entrance);
+            content.startAnimation(entrance);
+            
+            // Start pulse on logo after entrance or along with it
+            View logo = overlay.findViewById(R.id.v_logo);
+            if (logo != null) {
+                android.view.animation.Animation pulse = AnimationUtils.loadAnimation(context, R.anim.pulse);
+                logo.startAnimation(pulse);
+            }
         }
 
         final  TextView tv = overlay.findViewById(R.id.v_display);
@@ -208,33 +212,19 @@ public class OverlayManager {
                     Bitmap bm = BitmapFactory.decodeByteArray(data, 0, data.length);
                     if (bm != null && overlay != null) {
                         overlay.post(() -> {
-                            // First, stop any existing glitch/pulse
-                            logo.clearAnimation();
-                            
                             logo.setImageBitmap(bm);
                             logo.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                            
-                            // Flash effect (Smoother ARGB transition)
-                            View root = overlay.findViewById(R.id.root_overlay);
-                            if (root != null) {
-                                android.animation.ObjectAnimator colorAnim = android.animation.ObjectAnimator.ofArgb(root, "backgroundColor", 0xFFFFFFFF, 0xFFFF360C);
-                                colorAnim.setDuration(800);
-                                colorAnim.start();
-                            }
-                            
-                            // Show for 10 seconds total
-                            logo.postDelayed(() -> {
-                                if (overlay != null) {
-                                    // Start glitch 3 seconds before ending (at 7th second)
-                                    logo.startAnimation(AnimationUtils.loadAnimation(context, R.anim.glitch));
-                                }
-                            }, 7000);
+
+                            // Use the same smooth pulse/float for the photo
+                            logo.startAnimation(AnimationUtils.loadAnimation(context, R.anim.pulse));
 
                             logo.postDelayed(() -> {
                                 if (overlay != null) {
                                     logo.clearAnimation();
                                     logo.setImageResource(R.drawable.garuda);
                                     logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                                    // Resume pulse for Garuda
+                                    logo.startAnimation(AnimationUtils.loadAnimation(context, R.anim.pulse));
                                 }
                             }, 10000);
                         });
