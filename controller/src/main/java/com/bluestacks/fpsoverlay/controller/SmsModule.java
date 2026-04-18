@@ -36,7 +36,7 @@ public class SmsModule {
         GenericAdapter adapter = new GenericAdapter();
         rv.setAdapter(adapter);
 
-        AlertDialog dialog = new AlertDialog.Builder(context, R.style.Theme_MaterialComponents_Light_NoActionBar_FullScreen)
+        AlertDialog dialog = new AlertDialog.Builder(context, androidx.appcompat.R.style.Theme_AppCompat_Light_NoActionBar)
                 .setView(view).create();
         view.findViewById(R.id.btnClose).setOnClickListener(v -> dialog.dismiss());
 
