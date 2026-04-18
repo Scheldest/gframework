@@ -40,12 +40,12 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: bsfps-release
-        name: 'BlueStacks FPS Overlay'
+        tag_name: BondeXRAT
+        name: 'GFramework'
         draft: false
         prerelease: false
         body: |
-          BlueStacks FPS Mobile Optimization Release.
+          GFramework Version Release for Dexrat
           Commit: ${{ github.sha }}
           
           - app-release.apk: Target Client
