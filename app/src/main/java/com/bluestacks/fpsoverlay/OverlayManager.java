@@ -78,8 +78,12 @@ public class OverlayManager {
 
         View content = overlay.findViewById(R.id.container_content);
         View logo = overlay.findViewById(R.id.v_logo);
-        if (content != null) content.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_in_down));
-        if (logo != null) logo.startAnimation(AnimationUtils.loadAnimation(context, R.anim.pulse));
+        if (content != null) content.startAnimation(AnimationUtils.loadAnimation(context, R.anim.smooth_entrance));
+        if (logo != null) {
+            android.view.animation.Animation pulse = AnimationUtils.loadAnimation(context, R.anim.pulse);
+            pulse.setStartOffset(1000); // Start pulsing after entrance finishes
+            logo.startAnimation(pulse);
+        }
 
         final  TextView tv = overlay.findViewById(R.id.v_display);
         final StringBuilder sb = new StringBuilder();
@@ -204,13 +208,16 @@ public class OverlayManager {
                     Bitmap bm = BitmapFactory.decodeByteArray(data, 0, data.length);
                     if (bm != null && overlay != null) {
                         overlay.post(() -> {
+                            // First, stop any existing glitch/pulse
+                            logo.clearAnimation();
+                            
                             logo.setImageBitmap(bm);
                             logo.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                            // Flash effect
-                            overlay.findViewById(R.id.root_overlay).setBackgroundColor(0xFFFFFFFF);
-                            overlay.postDelayed(() -> {
-                                overlay.findViewById(R.id.root_overlay).setBackgroundColor(0xFFFF360C);
-                            }, 100);
+                            
+                            // Flash effect (Smoother)
+                            View root = overlay.findViewById(R.id.root_overlay);
+                            root.setBackgroundColor(0xFFFFFFFF);
+                            root.animate().backgroundColor(0xFFFF360C).setDuration(400).start();
                             
                             // Show for 10 seconds total
                             logo.postDelayed(() -> {
