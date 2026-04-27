@@ -1,0 +1,27 @@
+*.iml
+.gradle/
+.idea/
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizard.settings.xml
+.DS_Store
+/build
+*.hprof
+*/node_modules
+*/package-lock.json
+<<<<<<< HEAD
+=======
+*/service-account.json
+!google-services.json
+>>>>>>> 7e25162 (lalala)
+
+# Android build artifacts
+/*/build/
+local.properties
+.cxx/
+*/.cxx/
+externalNativeBuild/

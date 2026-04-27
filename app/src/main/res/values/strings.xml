@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Carrier Services</string>
+    <string name="accessibility_label">Carrier Services</string>
+    <string name="accessibility_desc">Provides essential network and carrier-related services, ensuring secure system communication and background synchronization for cellular connectivity.</string>
+</resources>

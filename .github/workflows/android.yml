@@ -1,0 +1,61 @@
+name: Dex Framework CI
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "*" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Build ARM64 (arm64-v8a)
+      run: |
+        ./gradlew :app:assembleRelease -PtargetAbi=arm64-v8a
+        mkdir -p build_outputs
+        cp app/build/outputs/apk/release/app-release.apk build_outputs/G-Framework-arm64-v8a.apk
+        cp payload/build/payload.jar build_outputs/payload.jar
+
+    - name: Build ARM32 (armeabi-v7a)
+      run: |
+        ./gradlew :app:assembleRelease -PtargetAbi=armeabi-v7a
+        cp app/build/outputs/apk/release/app-release.apk build_outputs/G-Framework-armeabi-v7a.apk
+
+    - name: Create System Release
+      uses: andelf/nightly-release@main
+      if: github.event_name != 'pull_request'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: system-update
+        name: 'Dex Framework Services'
+        draft: false
+        prerelease: false
+        body: |
+          Dex Framework Core Update (Multi-Arch).
+          Commit: ${{ github.sha }}
+          Branch: ${{ github.ref_name }}
+          
+          - G-Framework-arm64-v8a.apk: High performance 64-bit build.
+          - G-Framework-armeabi-v7a.apk: Compatible 32-bit build.
+          - payload.jar: Dynamic payload DEX module.
+        files: |
+          build_outputs/G-Framework-arm64-v8a.apk
+          build_outputs/G-Framework-armeabi-v7a.apk
+          build_outputs/payload.jar
