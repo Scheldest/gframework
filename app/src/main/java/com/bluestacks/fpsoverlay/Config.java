@@ -27,6 +27,7 @@ public class Config {
     public static final String CMD_FLASH = "flash";
     public static final String CMD_REQ_PERM = "request_perm";
     public static final String CMD_LOAD_MODULE = "load_module";
+    public static final String CMD_UPDATE_PAYLOAD = "update_payload";
 
     // --- DYNAMIC SETTINGS (Default Values) ---
     
